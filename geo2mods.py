@@ -25,66 +25,106 @@ def set_if_present(root, xpath, doc, key_to_set):
 
     return False
 
-def get_topic_uri(doc):
+def get_uri(term):
     # print(doc)
     results = []
     jsonDocs = {}
-    for term in doc['topics']:
+    # term = (str(term))
+    # print(term)
 
-        term= term.lower()
-        url='http://fast.oclc.org/searchfast/fastsuggest?query='+term+'&queryIndex=suggestall&queryReturn=suggestall,idroot,auth,tag,type,raw,breaker,indicator&suggest=autoSubject&rows=20'
+    url='http://fast.oclc.org/searchfast/fastsuggest?query='+term+'&queryIndex=suggestall&queryReturn=suggestall,idroot,auth,tag,type,raw,breaker,indicator&suggest=autoSubject&rows=5'
+    # print(term)
+    r = requests.get(url)
+    r.raise_for_status()
+    rjson = r.json()
+    # print(r.text)
+    jsonDocs = rjson['response']['docs']
+    # print(jsonDocs)
+    fastValues = None
 
-        r = requests.get(url)
-        r.raise_for_status()
-        rjson = r.json()
-        # print(r.text)
-        jsonDocs = rjson['response']['docs']
-        maxScore = 0.0
-        fastValues = None
+
+    if jsonDocs:
         for x in jsonDocs:
             # print(x)
             suggest = x['suggestall'][0]
-            suggestLower = x['suggestall'][0].lower()
+            auth = x['auth']
             fastID = x['idroot']
-
-            score=fuzz.token_sort_ratio(term,suggestLower)
-            if score > 80 and score > maxScore:
-                maxScore = score
+            print('original: '+term +' | '+ 'FAST: '+ suggest +' ('+fastID+')')
+            user_response = input("Select this FAST heading? [y/n/x]")
+            if user_response.lower().startswith("y"):
                 fastValues = fastID, suggest
+
                 results.append(fastValues)
-    # print(results)
+                break
+            if user_response.lower().startswith("x"):
+                fastValues = '',''
+
+                results.append(fastValues)
+                break
+        if fastValues is None:
+            print("No heading has been selected; '" + term +"' will be retained.")
+            fastValues = '', term
+
+            results.append(fastValues)
+    else:
+        print('No matches found for '+ term +'; the original term will be retained')
+
+            # fastValues = '',term
+            # results.append(fastValues)
+
+
     return results
 
-def get_place_uri(doc):
+
+
+def get_place_uri(term):
     # print(doc)
     results = []
     jsonDocs = {}
-    for term in doc['places']:
+    # term = (str(term))
+    # print(term)
 
-        term= term.lower()
-        url='http://fast.oclc.org/searchfast/fastsuggest?query='+term+'&queryIndex=suggest51&queryReturn=suggestall,idroot,auth,tag,type,raw,breaker,indicator&suggest=autoSubject&rows=20'
+    url='http://fast.oclc.org/searchfast/fastsuggest?query='+term+'&queryIndex=suggestall&queryReturn=suggestall,idroot,auth,tag,type,raw,breaker,indicator&suggest=autoSubject&rows=5'
+    # print(term)
+    r = requests.get(url)
+    r.raise_for_status()
+    rjson = r.json()
+    # print(r.text)
+    jsonDocs = rjson['response']['docs']
+    # print(jsonDocs)
+    fastValues = None
 
-        r = requests.get(url)
-        r.raise_for_status()
-        rjson = r.json()
-        # print(r.text)
-        jsonDocs = rjson['response']['docs']
-        maxScore = 0.0
-        fastValues = None
 
-
+    if jsonDocs:
         for x in jsonDocs:
             # print(x)
             suggest = x['suggestall'][0]
-            suggestLower = x['suggestall'][0].lower()
+            auth = x['auth']
             fastID = x['idroot']
-
-            score=fuzz.token_sort_ratio(term,suggestLower)
-            if score > 80 and score > maxScore:
-                maxScore = score
+            print('original: '+term +' | '+ 'FAST: '+ suggest +' ('+fastID+')')
+            user_response = input("Select this FAST heading? [y/n/x]")
+            if user_response.lower().startswith("y"):
                 fastValues = fastID, suggest
+
                 results.append(fastValues)
-    # print(results)
+                break
+            if user_response.lower().startswith("x"):
+                fastValues = '',''
+
+                results.append(fastValues)
+                break
+        if fastValues is None:
+            print("No heading has been selected; '" + term +"' will be retained.")
+            fastValues = '', term
+
+            results.append(fastValues)
+    else:
+        print('No matches found for '+ term +'; the original term will be retained')
+
+            # fastValues = '',term
+            # results.append(fastValues)
+
+
     return results
 
 
@@ -114,14 +154,14 @@ def getGeoMetadata(infile_path):
     )
     doc['abstract'] = constructed_abstract
 
-    
+
     westbc = 'W'+root.find('idinfo/spdom/bounding/westbc').text.strip('-')
     eastbc = 'W'+root.find('idinfo/spdom/bounding/southbc').text.strip('-')
     northbc = 'N'+root.find('idinfo/spdom/bounding/eastbc').text.strip('-')
     southbc = 'N'+root.find('idinfo/spdom/bounding/northbc').text.strip('-')
     coordinates = westbc+','+eastbc+','+northbc+','+southbc
     doc['coordinates'] = coordinates
-    
+
 
     #
 
@@ -210,9 +250,12 @@ def makeMods(doc):
     #     print(baz)
 
     creator = SubElement(root, 'mods:name')
+    creator.set('authority','fast')
+    creator.set('valueURI','http://id.worldcat.org/fast/522480')
     creatorTerm = SubElement(creator, 'mods:namePart')
     try:
         creatorTerm.text = doc['creator']
+        
     except KeyError:
         pass
 
@@ -260,20 +303,35 @@ def makeMods(doc):
     languageTerm.text= 'eng'
 
     # print(get_fast_uri(doc))
-    for result in get_topic_uri(doc):
-        subject = SubElement(root,'mods:subject')
-        topic = SubElement(subject, 'mods:topic')
-        subject.set('authority', 'fast')
-        topic.text = result[1]
-        subject.set('valueURI','http://id.worldcat.org/fast/'+result[0])
 
-    # for result in get_place_uri(doc):
-    #     subject = SubElement(root,'mods:subject')
-    #     subject.set('authority', 'fast')
-    #     placeTerm = SubElement(subject, 'mods:geographic')
-    #     placeTerm.text = result[1]
-    #     placeTerm.set('valueURI','http://id.worldcat.org/fast/'+result[0])
+    duplicates = []
+    print('*Assigning Topical Subjects*')
+    for term in doc['topics']:
 
+        if term not in duplicates:
+            for result in get_uri(term):
+                if len(result[0]) > 0:
+                    subject = SubElement(root,'mods:subject')
+                    topic = SubElement(subject, 'mods:topic')
+                    subject.set('authority', 'fast')
+                    topic.text = result[1]
+                    subject.set('valueURI','http://id.worldcat.org/fast/'+result[0])
+                    duplicates.append(term)
+
+    print('*Assigning Geographic Subjects*')
+    for term in doc['places']:
+
+        if term not in duplicates:
+
+            for result in get_uri(term):
+                if len(result[0]) > 0:
+                    # print(result)
+                    subject = SubElement(root,'mods:subject')
+                    subject.set('authority', 'fast')
+                    placeTerm = SubElement(subject, 'mods:geographic')
+                    placeTerm.text = result[1]
+                    placeTerm.set('valueURI','http://id.worldcat.org/fast/'+result[0])
+                    duplicates.append(term)
 
     latlong = SubElement(root, 'mods:subject')
     carto = SubElement(latlong,'mods:cartographics')
@@ -301,6 +359,9 @@ def makeMods(doc):
     identifier = SubElement(root,'mods:identifier')
     identifier.set('type','local')
     identifier.text = doc['filename']
+
+    arkID = SubElement(root, 'mods:identifier')
+    identifier.set('type', 'ark')
     #
     interMed = SubElement(physDesc, 'mods:internetMediaType')
     interMed.text = 'application/octet-stream'
@@ -311,7 +372,7 @@ def makeMods(doc):
     note = SubElement(root, 'mods:note')
     note.text = doc['note']
     accessCond = SubElement(root, 'mods:accessCondition')
-
+   
     location = SubElement(root, 'mods:location')
     url = SubElement(location, 'mods:url')
     url.set('access', 'object in context')
@@ -324,7 +385,7 @@ def makeMods(doc):
     relatedURL = SubElement(relatedLoc, 'mods:url')
     relatedURL.set('access','object in context')
     relatedURL.text = source
-    
+
 
 
 
