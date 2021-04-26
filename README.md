@@ -2,28 +2,28 @@
 
 This repository contains code for working with MODS records for the Colorado Geolibrary. A workflow for new datasets is provided below.
 
-##addARK.py
+## addARK.py
 
 Legacy code that added ARKs to mods files. Kept here to be tweaked for other needs.
 
-##addRights.py
+## addRights.py
 
 Similar to addARK.py, it was necessary to make a global edit to the rights statement. This code could be adjusted for other global edits.
 
-##cleanGeo.py
+## cleanGeo.py
 
 Script that also could be tweaked to change fields. Current iteration added a publisher and changed the form.
 
-##geo2mods.py
+## geo2mods.py
 
 This is the main script to convert the original geospatial metadata to MODS.
 
-##geo2mods_blm.py
+## geo2mods_blm.py
 
 An iteration of `geo2mods.py` specific to metadata from BLM. Retained as an example of how to adjust the original script to unique needs of a particular data source.
 
 
-#Geospatial to MODS workflow
+# Geospatial to MODS workflow
 
 1. Navigate to the geospatial dataset
 2. Run `python geo2mods.py [metadata file]`
