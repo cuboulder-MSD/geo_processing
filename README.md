@@ -33,6 +33,6 @@ Do this until you get an output that works.
 5. Zip the dataset *with* the other MODS(m2) file.
 6. Load the dataset in Geoloader. 
 7. Crosswalk the metadata from the MODS file.
-8. Insert the minted ARK into m1 `mods:identifier`.
+8. Insert the minted ARK into m1 `<mods:identifier type='ark'>new ark</mods:identifier>`.
 9. Finish the Geoloader process.
 10. Add m1 to https://github.com/cuboulder-MSD/geolibrary
