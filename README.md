@@ -35,4 +35,4 @@ Do this until you get an output that works.
 7. Crosswalk the metadata from the M2 file. (You'll have the option of picking the metadata file you want, including the source metadata.)
 8. Geoloader will mint an ARK. Insert the minted ARK into M1 `<mods:identifier type='ark'>[new ark]</mods:identifier>`.
 9. Finish the Geoloader process.
-10. Add m1 to https://github.com/cuboulder-MSD/geolibrary
+10. Add M1 to https://github.com/cuboulder-MSD/geolibrary
